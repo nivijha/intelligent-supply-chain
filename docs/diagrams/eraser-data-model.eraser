@@ -1,0 +1,114 @@
+direction right
+colorMode pastel
+styleMode plain
+typeface clean
+notation crows-feet
+
+User [icon: user, color: "#6c8ebf"] {
+  id int pk
+  name string
+  email string
+  password_hash string
+  role_id int fk
+  created_at timestamp
+}
+
+Role [icon: users, color: "#6c8ebf"] {
+  id int pk
+  name string
+}
+
+Commodity [icon: package, color: "#82b366"] {
+  id int pk
+  name string
+  category string
+}
+
+Warehouse [icon: warehouse, color: "#82b366"] {
+  id int pk
+  name string
+  location string
+  capacity number
+  region string
+}
+
+Inventory [icon: package, color: "#d6b656"] {
+  id int pk
+  commodity_id int fk
+  warehouse_id int fk
+  current_stock number
+  safety_stock number
+  last_updated timestamp
+}
+
+HistoricalDemand [icon: trending-up, color: "#d6b656"] {
+  id int pk
+  commodity_id int fk
+  warehouse_id int fk
+  date date
+  demand_quantity number
+}
+
+Forecast [icon: bar-chart, color: "#82b366"] {
+  id int pk
+  commodity_id int fk
+  warehouse_id int fk
+  forecast_period string
+  forecast_value number
+  model_version string
+  created_at timestamp
+}
+
+Recommendation [icon: lightbulb, color: "#b85450"] {
+  id int pk
+  commodity_id int fk
+  from_warehouse_id int fk
+  to_warehouse_id int fk
+  recommendation_type string
+  justification string
+  status string
+  created_at timestamp
+  created_by int fk
+}
+
+Document [icon: file-text, color: "#9673a6"] {
+  id int pk
+  title string
+  source string
+  document_type string
+  upload_date date
+  uploaded_by int fk
+}
+
+DocumentChunk [icon: database, color: "#9673a6"] {
+  id int pk
+  document_id int fk
+  chunk_index int
+  content string
+  embedding_vector vector
+}
+
+AuditLog [icon: clipboard, color: "#666666"] {
+  id int pk
+  user_id int fk
+  action string
+  entity_type string
+  entity_id int
+  timestamp timestamp
+  ip_address string
+}
+
+User.role_id > Role.id
+Inventory.commodity_id > Commodity.id
+Inventory.warehouse_id > Warehouse.id
+HistoricalDemand.commodity_id > Commodity.id
+HistoricalDemand.warehouse_id > Warehouse.id
+Forecast.commodity_id > Commodity.id
+Forecast.warehouse_id > Warehouse.id
+Recommendation.commodity_id > Commodity.id
+Recommendation.from_warehouse_id > Warehouse.id
+Recommendation.to_warehouse_id > Warehouse.id
+Recommendation.created_by > User.id
+Document.uploaded_by > User.id
+DocumentChunk.document_id > Document.id
+AuditLog.user_id > User.id

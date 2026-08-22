@@ -1,0 +1,55 @@
+direction right
+colorMode pastel
+styleMode plain
+typeface clean
+
+"Users and Roles" [color: "#d6b656"] {
+  Admin [label: "ADMIN", icon: user]
+  Planner [label: "PLANNER", icon: user]
+  WarehouseManager [label: "WAREHOUSE MANAGER", icon: user]
+  Analyst [label: "ANALYST", icon: user]
+}
+
+"Frontend Hosting" [color: "#6c8ebf"] {
+  ReactBuild [label: "React dashboard", icon: layout-dashboard]
+  VercelNetlify [label: "Vercel / Netlify", icon: cloud]
+}
+
+"Application Hosting" [color: "#6c8ebf"] {
+  Backend [label: "Node.js + Express API", icon: server]
+  MLService [label: "Python + FastAPI", icon: cpu]
+  Docker [label: "Docker Compose local", icon: package]
+}
+
+"Managed Data and AI" [color: "#b85450"] {
+  PostgreSQL [label: "Supabase / AWS RDS PostgreSQL", icon: database]
+  VectorStore [label: "Vector store", icon: database]
+  LLM [label: "OpenAI API / self-hosted LLM", icon: message-circle]
+}
+
+"Security Boundary" [color: "#d6b656"] {
+  Login [label: "Login", icon: lock]
+  PasswordHash [label: "bcrypt password hashing", icon: key]
+  JWT [label: "JWT HMAC-SHA256, 24h", icon: shield]
+  RBAC [label: "Role middleware", icon: shield]
+  Audit [label: "Audit logging", icon: clipboard]
+}
+
+Admin, Planner, WarehouseManager, Analyst > ReactBuild
+ReactBuild > VercelNetlify
+ReactBuild > Login: credentials
+Login > PasswordHash
+Login > JWT: token
+JWT > RBAC: Bearer token
+RBAC > Backend: protected REST routes
+Backend > PostgreSQL: SQL / ORM
+Backend > MLService: REST /predict
+Backend > VectorStore: RAG retrieval
+MLService > LLM: optional knowledge call
+Backend > Audit: record action
+Docker --> Backend: local development
+Docker --> MLService: local development
+Admin > RBAC: full access
+Planner > RBAC: forecast and recommendations
+WarehouseManager > RBAC: inventory editing
+Analyst > RBAC: read-only dashboard

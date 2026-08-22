@@ -1,0 +1,63 @@
+direction right
+colorMode pastel
+styleMode plain
+typeface clean
+
+"Government Data Sources" [color: "#666666"] {
+  FCIReports [label: "FCI reports", icon: file-text]
+  DFPDData [label: "DFPD data", icon: database]
+  Circulars [label: "Government circulars", icon: file-text]
+}
+
+"Data Processing" [color: "#666666"] {
+  Ingestion [label: "Python ingestion", icon: upload]
+  Validation [label: "Validation and cleaning", icon: check-circle]
+  FeatureEngineering [label: "Feature engineering", icon: settings]
+}
+
+"Storage" [color: "#b85450"] {
+  PostgreSQL [label: "PostgreSQL operational data", icon: database]
+  VectorStore [label: "Vector store embeddings", icon: database]
+}
+
+"Application Services" [color: "#6c8ebf"] {
+  ExpressAPI [label: "Node.js + Express API", icon: server]
+  MLService [label: "Python + FastAPI ML service", icon: cpu]
+  RecommendationEngine [label: "Recommendation engine", icon: lightbulb]
+  SHAP [label: "SHAP explainability", icon: bar-chart]
+  RAGService [label: "RAG service", icon: message-circle]
+}
+
+"Presentation" [color: "#6c8ebf"] {
+  ReactDashboard [label: "React dashboard", icon: layout-dashboard]
+  ForecastView [label: "Forecast and SHAP view", icon: trending-up]
+  InventoryView [label: "Inventory and warehouse views", icon: package]
+  RecommendationView [label: "Recommendations and approval", icon: check-square]
+  RAGView [label: "Knowledge assistant", icon: messages-square]
+}
+
+"Human Decision" [color: "#d6b656"] {
+  Planner [label: "Planner", icon: user]
+  WarehouseManager [label: "Warehouse manager", icon: user]
+  Analyst [label: "Analyst", icon: user]
+  HumanValidation [label: "Validate and act on recommendation", icon: check-circle]
+}
+
+FCIReports, DFPDData, Circulars > Ingestion
+Ingestion > Validation > FeatureEngineering > PostgreSQL
+ReactDashboard > ExpressAPI: REST / JSON
+ExpressAPI > PostgreSQL: SQL / ORM
+ExpressAPI > MLService: HTTP /predict
+MLService > RecommendationEngine
+MLService > SHAP
+ExpressAPI > RAGService: RAG query
+RAGService > VectorStore: similarity search
+MLService > ForecastView
+RecommendationEngine > RecommendationView
+SHAP > ForecastView
+PostgreSQL > InventoryView
+VectorStore > RAGView
+ForecastView, InventoryView, RecommendationView, RAGView > ReactDashboard
+ReactDashboard > Planner, WarehouseManager, Analyst
+RecommendationView > HumanValidation
+HumanValidation > PostgreSQL: audit decision

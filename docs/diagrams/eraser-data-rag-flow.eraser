@@ -1,0 +1,41 @@
+direction right
+colorMode pastel
+styleMode plain
+typeface clean
+
+"Operational Data Flow" [color: "#6c8ebf"] {
+  GovernmentData [label: "Government data", icon: file-text]
+  Ingestion [label: "Ingestion", icon: upload]
+  Validation [label: "Validation", icon: check-circle]
+  Cleaning [label: "Cleaning", icon: settings]
+  Features [label: "Feature engineering", icon: sliders]
+  OperationalDB [label: "PostgreSQL", icon: database]
+  API [label: "Express API", icon: server]
+  Forecast [label: "Demand forecast", icon: trending-up]
+  InventoryAnalysis [label: "Inventory analysis", icon: package]
+  WarehouseAnalysis [label: "Warehouse analysis", icon: warehouse]
+  Recommendations [label: "Recommendation engine", icon: lightbulb]
+  Explanation [label: "SHAP explanation", icon: bar-chart]
+  Dashboard [label: "React dashboard", icon: layout-dashboard]
+  HumanDecision [label: "Human decision", icon: user]
+}
+
+"RAG Document Flow" [color: "#9673a6"] {
+  Documents [label: "Government documents", icon: file-text]
+  Parsing [label: "Parse documents", icon: file]
+  Chunking [label: "Chunk content", icon: split]
+  Embeddings [label: "Generate embeddings", icon: cpu]
+  VectorDB [label: "Vector store", icon: database]
+  UserQuery [label: "User query", icon: search]
+  QueryEmbedding [label: "Query embedding", icon: cpu]
+  SimilaritySearch [label: "Similarity search", icon: search]
+  RetrievedChunks [label: "Retrieved chunks", icon: list]
+  LLM [label: "LLM answer generation", icon: message-circle]
+  Citations [label: "Answer and citations", icon: link]
+}
+
+GovernmentData > Ingestion > Validation > Cleaning > Features > OperationalDB > API > Forecast > InventoryAnalysis > WarehouseAnalysis > Recommendations > Explanation > Dashboard > HumanDecision
+Documents > Parsing > Chunking > Embeddings > VectorDB
+UserQuery > QueryEmbedding > SimilaritySearch > VectorDB
+VectorDB > RetrievedChunks > LLM > Citations > Dashboard
+Dashboard > UserQuery: RAG assistant
