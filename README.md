@@ -1,6 +1,21 @@
 # Intelligent Supply Chain and Logistics Decision Support Platform
 
+*Documentation-only repository — source code under active development.*
+
 A machine learning and RAG-based decision support system for India's public food supply chain, integrating demand forecasting, inventory analysis, rule-based recommendations with SHAP explainability, and a knowledge-grounded RAG assistant for official government documents.
+
+## Project Status
+
+**Current**: Documentation phase only. This repository contains the full project documentation (design, architecture, implementation plan, testing strategy, and academic components) for an academic final-year project.
+
+**Upcoming**: Source code implementation including:
+- PostgreSQL database schema and migrations
+- Node.js + Express backend with JWT auth and RBAC
+- Python FastAPI ML service (XGBoost, Prophet, SHAP)
+- React frontend dashboard (8 pages)
+- RAG pipeline with vector store integration
+- CI/CD pipeline (GitHub Actions)
+- Deployment configurations
 
 ## Project Overview
 
@@ -57,7 +72,7 @@ The system follows a modular separation:
 
 ## Development
 
-This project documents the full software development lifecycle from problem definition through deployment, though the actual source code implementation is maintained separately.
+This project documents the full software development lifecycle from problem definition through deployment. The actual source code implementation will be added to this repository upon completion of the documentation phase.
 
 ## License
 
