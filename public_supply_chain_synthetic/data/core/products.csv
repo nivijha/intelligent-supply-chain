@@ -1,0 +1,5 @@
+product_id,product_name,unit,priority_weight,demand_volatility,shelf_life_days,storage_type
+PDS-RICE,Rice,quintal,1.0,0.08,365,Dry
+PDS-WHEAT,Wheat,quintal,0.92,0.07,270,Dry
+PDS-SUGAR,Sugar,quintal,0.25,0.12,365,Dry
+PDS-PULSES,Pulses,quintal,0.18,0.15,180,Dry

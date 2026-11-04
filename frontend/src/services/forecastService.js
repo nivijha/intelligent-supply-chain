@@ -1,0 +1,122 @@
+import api from "./api";
+
+let productsCache = null;
+async function products() {
+  if (productsCache) return productsCache;
+  const res = await api.get("/products");
+  productsCache = res.data.data || [];
+  return productsCache;
+}
+
+async function productIdFor(commodity) {
+  const list = await products();
+  const found = list.find((p) => p.product_name === commodity || p.product_id === commodity);
+  return found ? found.product_id : commodity;
+}
+
+export const forecastService = {
+  async getCommodities() {
+    const list = await products();
+    return list.map((p) => p.product_name);
+  },
+
+  async getRegions() {
+    const res = await api.get("/districts");
+    return (res.data.data || []).map((d) => d.district_name);
+  },
+
+  async getWarehouses() {
+    const res = await api.get("/warehouses");
+    return (res.data.data || []).map((w) => w.warehouse_id);
+  },
+
+  async getHorizons() {
+    return [
+      { value: 1, label: "1 Month" },
+      { value: 3, label: "3 Months" },
+      { value: 6, label: "6 Months" },
+    ];
+  },
+
+  async getHistoricalData(commodity, days = 180) {
+    const productId = await productIdFor(commodity);
+    const res = await api.get("/demand/history", { params: { product_id: productId } });
+    return (res.data.data || []).map((r) => ({
+      date: r.month,
+      demand: Number(r.demand_quintals),
+      type: "historical",
+    }));
+  },
+
+  async getForecastData(commodity, horizon = 1) {
+    const productId = await productIdFor(commodity);
+    const months = typeof horizon === "number" && horizon > 6 ? Math.round(horizon / 30) : horizon || 1;
+    const res = await api.post("/demand/forecast", {
+      product_id: productId,
+      horizon: Math.max(1, Math.min(12, months)),
+      persist: false,
+    });
+    return (res.data.data || []).map((r) => ({
+      date: r.forecast_month,
+      demand: Number(r.predicted_demand_quintals),
+      lowerBound: Number(r.predicted_demand_quintals) * 0.9,
+      upperBound: Number(r.predicted_demand_quintals) * 1.1,
+      type: "forecast",
+    }));
+  },
+
+  async getModelInfo() {
+    const res = await api.get("/demand/metrics");
+    const data = res.data;
+    const rf = data.metrics?.random_forest || {};
+    return {
+      model: "Random Forest",
+      baseline: "Seasonal Naive",
+      version: data.model_version,
+      lastTrained: "see model artifact",
+      evaluation: {
+        MAE: rf.mae?.toFixed ? rf.mae.toFixed(1) : rf.mae,
+        RMSE: rf.rmse?.toFixed ? rf.rmse.toFixed(1) : rf.rmse,
+        MAPE: rf.mape ? `${Number(rf.mape).toFixed(1)}%` : "n/a",
+      },
+      features: ["lag_1", "lag_3", "lag_12", "rolling_mean_3", "month_sin", "month_cos"],
+    };
+  },
+
+  async getShapFeatures() {
+    try {
+      const histRes = await api.get("/demand/history");
+      const sample = (histRes.data.data || []).slice(-1);
+      if (!sample.length) return [];
+      const res = await api.post("/demand/explain", { records: sample, top_n: 10 });
+      const first = (res.data.data || [])[0];
+      return (first?.contributions || []).map((c) => ({
+        feature: c.feature,
+        contribution: Math.abs(c.contribution),
+        direction: c.direction === "increases" ? "positive" : "negative",
+      }));
+    } catch (err) {
+      return [];
+    }
+  },
+
+  async getForecastSummary(commodity) {
+    const productId = await productIdFor(commodity);
+    const forecastRes = await api.post("/demand/forecast", {
+      product_id: productId,
+      horizon: 3,
+      persist: false,
+    });
+    const forecasts = forecastRes.data.data || [];
+    const total = forecasts.reduce((sum, r) => sum + Number(r.predicted_demand_quintals), 0);
+    return {
+      forecastedDemand: Math.round(total),
+      currentInventory: 0,
+      expectedShortfall: 0,
+      safetyStock: 0,
+      horizon: forecasts.length ? forecasts.length : 3,
+    };
+  },
+};
+
+export default forecastService;

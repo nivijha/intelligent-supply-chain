@@ -141,3 +141,26 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+ml_service/artifacts/
+public_supply_chain_synthetic/outputs/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Build output
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db

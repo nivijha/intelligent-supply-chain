@@ -6,7 +6,7 @@ A machine learning and RAG-based decision support system for India's public food
 
 ## Project Status
 
-**Current**: Documentation phase only. This repository contains the full project documentation (design, architecture, implementation plan, testing strategy, and academic components) for an academic final-year project.
+**Current**: Implementation in progress. Backend, ML service, database, and frontend integration are available; RAG is deferred.
 
 **Upcoming**: Source code implementation including:
 - PostgreSQL database schema and migrations
@@ -72,7 +72,21 @@ The system follows a modular separation:
 
 ## Development
 
-This project documents the full software development lifecycle from problem definition through deployment. The actual source code implementation will be added to this repository upon completion of the documentation phase.
+Run the full stack:
+
+```bash
+docker compose up -d
+```
+
+- Backend: http://localhost:3001
+- ML service: http://localhost:8000
+- PostgreSQL: localhost:5433
+
+Frontend:
+
+```bash
+cd frontend && npm install && npm run dev
+```
 
 ## License
 

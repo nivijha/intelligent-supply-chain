@@ -1,0 +1,13 @@
+warehouse_id,warehouse_name,district_id,state,latitude,longitude,capacity_quintals,handling_capacity_quintals_day,storage_cost_per_quintal_month_inr,operating_cost_per_day_inr,reliability_score
+WH001,Regional_Godown_001,D022,Uttarakhand,28.0479,80.09357,53756,511,21.0,20850,0.77
+WH002,Regional_Godown_002,D016,Madhya Pradesh,27.11038,82.17613,61176,828,8.83,11948,0.829
+WH003,Regional_Godown_003,D023,Delhi,31.10515,77.81957,46157,1109,10.07,11179,0.891
+WH004,Regional_Godown_004,D024,Madhya Pradesh,26.2523,76.31405,63228,546,26.5,29773,0.833
+WH005,Regional_Godown_005,D015,Delhi,25.43727,75.00305,51120,1054,8.46,21000,0.98
+WH006,Regional_Godown_006,D007,Delhi,29.19405,75.29465,41834,904,23.65,9429,0.867
+WH007,Regional_Godown_007,D009,Himachal Pradesh,25.23113,77.79233,22715,1121,26.76,18795,0.887
+WH008,Regional_Godown_008,D002,Punjab,28.53322,74.76541,48907,894,13.34,28983,0.875
+WH009,Regional_Godown_009,D005,Rajasthan,29.76039,75.37081,36899,1327,8.43,17656,0.948
+WH010,Regional_Godown_010,D003,Haryana,29.23927,80.14005,18565,1380,10.8,14647,0.776
+WH011,Regional_Godown_011,D014,Uttarakhand,26.75455,74.74502,49580,1115,13.62,22789,0.908
+WH012,Regional_Godown_012,D019,Haryana,29.17774,76.25989,59626,1186,23.37,15054,0.97
