@@ -21,7 +21,7 @@ const app = express();
 
 app.use(helmet());
 app.use(cors({ origin: config.corsOrigin, credentials: true }));
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
 
 app.get("/health", (req, res) => res.json({ status: "healthy", service: "backend" }));
@@ -39,6 +39,9 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/audit", auditRoutes);
 
 app.use((err, req, res, next) => {
+  if (err?.type === "entity.too.large" || err?.status === 413) {
+    return res.status(413).json({ error: "Request body too large" });
+  }
   console.error(err);
   res.status(500).json({ error: "Internal server error" });
 });

@@ -114,6 +114,13 @@ def load_artifact(path=None) -> dict[str, Any]:
 
 
 def forecast_demand(history: pd.DataFrame, horizon: int, artifact: dict[str, Any]) -> pd.DataFrame:
+    """Forecast demand recursively.
+
+    Future shortage_event_flag is currently assumed to be 0 because no reliable
+    future shortage-event source exists. festival_season_flag is derived from the
+    target month. Historical shortage events are available in monthly_demand_history,
+    but future values would require a separate event calendar/schema.
+    """
     if horizon < 1:
         raise ValueError("horizon must be positive")
 

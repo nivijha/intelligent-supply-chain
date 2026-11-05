@@ -3,16 +3,16 @@ services:
     image: pgvector/pgvector:pg16
     container_name: isc-postgres
     environment:
-      POSTGRES_DB: intelligent_supply_chain
-      POSTGRES_USER: isc
-      POSTGRES_PASSWORD: isc_password
+      POSTGRES_DB: ${POSTGRES_DB:-intelligent_supply_chain}
+      POSTGRES_USER: ${POSTGRES_USER:-isc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-isc_password}
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - isc_pgdata:/var/lib/postgresql/data
       - ./database/migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U isc -d intelligent_supply_chain"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-isc} -d ${POSTGRES_DB:-intelligent_supply_chain}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,15 +23,12 @@ services:
       dockerfile: ml_service/Dockerfile
     container_name: isc-ml-service
     environment:
-      ML_DATA_DIR: /app/public_supply_chain_synthetic/data
-      ML_ARTIFACT_DIR: /app/ml_service/artifacts
+      ML_DATA_DIR: ${ML_DATA_DIR:-/app/public_supply_chain_synthetic/data}
+      ML_ARTIFACT_DIR: ${ML_ARTIFACT_DIR:-/app/ml_service/artifacts}
     ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - "${ML_SERVICE_PORT:-8000}:8000"
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; print(urllib.request.urlopen('http://localhost:8000/api/v1/health').read())\""]
+      test: ["CMD-SHELL", "python -c \"import urllib.request,json; d=json.loads(urllib.request.urlopen('http://localhost:8000/api/v1/health/ready').read()); raise SystemExit(0 if d.get('model_loaded') else 1)\""]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -42,21 +39,21 @@ services:
       dockerfile: backend/Dockerfile
     container_name: isc-backend
     environment:
-      PORT: 3001
-      DATABASE_URL: postgresql://isc:isc_password@postgres:5432/intelligent_supply_chain
-      JWT_SECRET: change-me-in-production
-      JWT_EXPIRES_IN: 8h
-      ML_SERVICE_URL: http://ml-service:8000
-      CORS_ORIGIN: http://localhost:5173
+      PORT: ${PORT:-3001}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-isc}:${POSTGRES_PASSWORD:-isc_password}@postgres:5432/${POSTGRES_DB:-intelligent_supply_chain}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      ML_SERVICE_URL: ${ML_SERVICE_URL:-http://ml-service:8000}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
     ports:
-      - "3001:3001"
+      - "${BACKEND_PORT:-3001}:3001"
     depends_on:
       postgres:
         condition: service_healthy
       ml-service:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"const p=process.env.PORT||3001; fetch('http://localhost:'+p+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 15s
       timeout: 10s
       retries: 5

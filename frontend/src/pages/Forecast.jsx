@@ -54,7 +54,7 @@ export function Forecast() {
 
       <ForecastChart commodity={commodity} horizon={horizon} />
 
-      <ExplanationChart commodity={commodity} />
+      <ExplanationChart commodity={commodity} region={region} />
     </div>
   );
 }

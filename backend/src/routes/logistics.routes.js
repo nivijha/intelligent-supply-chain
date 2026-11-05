@@ -17,7 +17,7 @@ router.get("/shipments", authenticate, async (req, res, next) => {
 });
 
 const optimizeSchema = z.object({
-  shipment_ids: z.array(z.string()).optional(),
+  shipment_ids: z.array(z.string().max(64)).max(1000).optional(),
 });
 
 router.post("/routes/optimize", authenticate, requireRoles(ROLES.ADMIN, ROLES.PLANNER, ROLES.WAREHOUSE_MANAGER), validate(optimizeSchema), async (req, res, next) => {
@@ -52,13 +52,13 @@ router.post("/routes/optimize", authenticate, requireRoles(ROLES.ADMIN, ROLES.PL
 });
 
 const createShipmentSchema = z.object({
-  shipment_id: z.string().min(1),
-  order_date: z.string().optional(),
-  warehouse_id: z.string(),
-  district_id: z.string(),
-  product_id: z.string(),
+  shipment_id: z.string().min(1).max(64),
+  order_date: z.string().max(32).optional(),
+  warehouse_id: z.string().max(64),
+  district_id: z.string().max(64),
+  product_id: z.string().max(64),
   quantity_quintals: z.number().positive(),
-  vehicle_id: z.string().optional(),
+  vehicle_id: z.string().max(64).optional(),
   distance_km: z.number().optional(),
   travel_time_hours: z.number().optional(),
   transport_cost_inr: z.number().optional(),

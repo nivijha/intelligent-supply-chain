@@ -83,12 +83,28 @@ export const forecastService = {
     };
   },
 
-  async getShapFeatures() {
+  async getShapFeatures(commodity, region) {
     try {
-      const histRes = await api.get("/demand/history");
-      const sample = (histRes.data.data || []).slice(-1);
-      if (!sample.length) return [];
-      const res = await api.post("/demand/explain", { records: sample, top_n: 10 });
+      if (!commodity) return [];
+      const productId = await productIdFor(commodity);
+      if (!productId) return [];
+
+      const params = { product_id: productId };
+      if (region) {
+        const districtsRes = await api.get("/districts");
+        const district = (districtsRes.data.data || []).find((item) => item.district_name === region);
+        if (district) params.district_id = district.district_id;
+      }
+      if (!params.district_id) return [];
+
+      const histRes = await api.get("/demand/history", { params });
+      const records = (histRes.data.data || [])
+        .slice()
+        .sort((a, b) => new Date(a.month) - new Date(b.month))
+        .slice(-13);
+      if (records.length < 13) return [];
+
+      const res = await api.post("/demand/explain", { records, top_n: 10 });
       const first = (res.data.data || [])[0];
       return (first?.contributions || []).map((c) => ({
         feature: c.feature,

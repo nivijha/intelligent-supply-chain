@@ -14,7 +14,7 @@ import { ChartContainer } from "../../components/common";
 import { EmptyState } from "../../components/common/EmptyState";
 import { LoadingState } from "../../components/common";
 
-export function ExplanationChart({ commodity }) {
+export function ExplanationChart({ commodity, region }) {
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modelInfo, setModelInfo] = useState(null);
@@ -24,7 +24,7 @@ export function ExplanationChart({ commodity }) {
       setLoading(true);
       try {
         const [shapData, model] = await Promise.all([
-          forecastService.getShapFeatures(),
+          forecastService.getShapFeatures(commodity, region),
           forecastService.getModelInfo(),
         ]);
         setFeatures(shapData);
@@ -36,10 +36,10 @@ export function ExplanationChart({ commodity }) {
       }
     };
 
-    if (commodity) {
+    if (commodity && region) {
       loadExplanation();
     }
-  }, [commodity]);
+  }, [commodity, region]);
 
   if (loading) {
     return (

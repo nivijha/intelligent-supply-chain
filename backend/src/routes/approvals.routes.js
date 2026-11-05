@@ -8,7 +8,7 @@ import { logAudit } from "../services/auditService.js";
 
 const router = Router();
 
-const schema = z.object({ reason: z.string().optional() });
+const schema = z.object({ reason: z.string().max(1000).optional() });
 
 router.post("/:id/approve", authenticate, requireRoles(ROLES.ADMIN, ROLES.PLANNER, ROLES.WAREHOUSE_MANAGER), validate(schema), async (req, res, next) => {
   try {

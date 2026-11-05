@@ -9,7 +9,12 @@ from fastapi.responses import JSONResponse
 
 from ..config import DATA_DIR, DEMAND_MODEL_PATH
 from ..demand import forecast_demand, load_artifact
-from ..features import feature_frame
+from ..features import (
+    BASE_NUMERIC_FEATURES,
+    CATEGORICAL_FEATURES,
+    REQUIRED_HISTORY_COLUMNS,
+    feature_frame,
+)
 from ..inventory import optimize_inventory
 from ..routes import optimize_routes
 from ..shap_explain import explain_demand
@@ -49,6 +54,21 @@ def _require_model():
     return artifact
 
 
+def _prepare_explain_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    engineered_columns = set(CATEGORICAL_FEATURES + BASE_NUMERIC_FEATURES)
+    if engineered_columns.issubset(frame.columns):
+        return frame
+
+    if REQUIRED_HISTORY_COLUMNS.issubset(frame.columns):
+        featured = feature_frame(frame)
+        if featured.empty:
+            raise ValueError("Insufficient historical records to build explanation features")
+        return featured
+
+    missing = sorted(set(CATEGORICAL_FEATURES + BASE_NUMERIC_FEATURES) - set(frame.columns))
+    raise ValueError(f"records are missing required fields: {missing}")
+
+
 @app.get("/api/v1/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     artifact = getattr(app.state, "artifact", None)
@@ -57,6 +77,24 @@ def health() -> HealthResponse:
         service="ml-service",
         model_loaded=artifact is not None,
         model_version=artifact["model_version"] if artifact else None,
+    )
+
+
+@app.get("/api/v1/health/live", response_model=HealthResponse)
+def health_live() -> HealthResponse:
+    return HealthResponse(status="healthy", service="ml-service", model_loaded=True, model_version=None)
+
+
+@app.get("/api/v1/health/ready", response_model=HealthResponse)
+def health_ready() -> HealthResponse:
+    artifact = getattr(app.state, "artifact", None)
+    if artifact is None:
+        raise HTTPException(status_code=503, detail="Demand model artifact is not available")
+    return HealthResponse(
+        status="healthy",
+        service="ml-service",
+        model_loaded=True,
+        model_version=artifact["model_version"],
     )
 
 
@@ -95,7 +133,10 @@ def demand_forecast(request: ForecastRequest) -> ForecastResponse:
     if history.empty:
         raise HTTPException(status_code=400, detail="No history available for the requested filters")
 
-    forecast = forecast_demand(history, request.horizon, artifact)
+    try:
+        forecast = forecast_demand(history, request.horizon, artifact)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     records = forecast.to_dict(orient="records")
     return ForecastResponse(
         model_version=artifact["model_version"],
@@ -111,6 +152,10 @@ def demand_explain(request: ExplainRequest) -> ExplainResponse:
     frame = pd.DataFrame(request.records)
     if frame.empty:
         raise HTTPException(status_code=400, detail="records must not be empty")
+    try:
+        frame = _prepare_explain_frame(frame)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     explanations = explain_demand(frame, artifact, top_n=request.top_n)
     return ExplainResponse(count=len(explanations), data=explanations)
 

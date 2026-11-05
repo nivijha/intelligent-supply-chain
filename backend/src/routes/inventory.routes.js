@@ -18,8 +18,8 @@ router.get("/", authenticate, async (req, res, next) => {
 });
 
 const optimizeSchema = z.object({
-  warehouse_id: z.string().optional(),
-  product_id: z.string().optional(),
+  warehouse_id: z.string().max(64).optional(),
+  product_id: z.string().max(64).optional(),
   horizon: z.number().int().min(1).max(12).default(1),
 });
 

@@ -27,8 +27,8 @@ router.get("/:id", authenticate, async (req, res, next) => {
 });
 
 const generateSchema = z.object({
-  district_id: z.string().optional(),
-  product_id: z.string().optional(),
+  district_id: z.string().max(64).optional(),
+  product_id: z.string().max(64).optional(),
   horizon: z.number().int().min(1).max(12).default(1),
 });
 
@@ -100,7 +100,7 @@ router.post("/generate", authenticate, requireRoles(ROLES.ADMIN, ROLES.PLANNER),
 
 const statusSchema = z.object({
   status: z.enum(["APPROVED", "REJECTED", "EXECUTED", "EXPIRED"]),
-  reason: z.string().optional(),
+  reason: z.string().max(1000).optional(),
 });
 
 router.patch("/:id/status", authenticate, requireRoles(ROLES.ADMIN, ROLES.PLANNER, ROLES.WAREHOUSE_MANAGER), validate(statusSchema), async (req, res, next) => {

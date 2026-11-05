@@ -16,6 +16,14 @@ const users = [
   { name: "Harpreet Singh", email: "manager@isc.gov.in", password: "manager123", role: "WAREHOUSE_MANAGER" },
 ];
 
+const nodeEnv = process.env.NODE_ENV || "development";
+const allowSeedUsers = process.env.ALLOW_SEED_USERS === "true";
+
+if (nodeEnv !== "development" && !allowSeedUsers) {
+  console.error("Refusing to seed development users outside development. Set ALLOW_SEED_USERS=true to override.");
+  process.exit(1);
+}
+
 async function main() {
   for (const u of users) {
     const hash = await bcrypt.hash(u.password, 10);
