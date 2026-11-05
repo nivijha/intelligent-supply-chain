@@ -7,6 +7,8 @@ if str(SRC) not in sys.path:
 
 
 import pandas as pd
+
+from ml_service.demand import train_demand_model
 from ml_service.config import DATA_DIR
 
 
@@ -23,3 +25,12 @@ def sample_history():
     return history[
         (history["district_id"].isin(["D001", "D002"])) & (history["product_id"] == "PDS-RICE")
     ].copy()
+
+
+@pytest.fixture(scope="session")
+def model_artifact():
+    history = pd.read_csv(DATA_DIR / "core" / "monthly_demand_history.csv")
+    subset = history[
+        (history["district_id"].isin(["D001", "D002"])) & (history["product_id"] == "PDS-RICE")
+    ].copy()
+    return train_demand_model(subset, test_months=6)

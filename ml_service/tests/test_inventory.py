@@ -1,14 +1,13 @@
 import pandas as pd
 
 from ml_service.config import DATA_DIR
-from ml_service.demand import load_artifact, forecast_demand
+from ml_service.demand import forecast_demand
 from ml_service.inventory import optimize_inventory
 
 
-def test_inventory_reorder_logic():
+def test_inventory_reorder_logic(model_artifact):
     history = pd.read_csv(DATA_DIR / "core" / "monthly_demand_history.csv")
-    art = load_artifact(__import__("pathlib").Path("artifacts/demand_model.joblib"))
-    forecast = forecast_demand(history, 1, art)
+    forecast = forecast_demand(history, 1, model_artifact)
     inv = pd.read_csv(DATA_DIR / "core" / "inventory_snapshot.csv")
     wh = pd.read_csv(DATA_DIR / "core" / "warehouses.csv")
     cand = pd.read_csv(DATA_DIR / "logistics" / "route_allocation_candidates.csv")

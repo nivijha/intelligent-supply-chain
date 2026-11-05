@@ -65,6 +65,9 @@ jobs:
         env:
           DATABASE_URL: postgresql://isc:isc_password@localhost:5433/intelligent_supply_chain
         run: python database/seeds/seed_from_csv.py
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
       - name: Seed users
         working-directory: backend
         env:
