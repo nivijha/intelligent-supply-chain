@@ -63,19 +63,19 @@ jobs:
         run: python -m pip install "psycopg[binary]==3.3.8"
       - name: Seed CSV data
         env:
-          DATABASE_URL: postgresql://isc:isc_password@localhost:5433/intelligent_supply_chain
-        run: python database/seeds/seed_from_csv.py
+          DATABASE_URL: postgresql://${POSTGRES_USER:-isc}:${POSTGRES_PASSWORD:-isc_password}@postgres:5432/${POSTGRES_DB:-intelligent_supply_chain}
+        run: python database/seeds/seed_from_csv.py --target local
       - name: Install backend dependencies
         working-directory: backend
         run: npm ci
       - name: Seed users
         working-directory: backend
         env:
-          DATABASE_URL: postgresql://isc:isc_password@localhost:5433/intelligent_supply_chain
+          DATABASE_URL: postgresql://${POSTGRES_USER:-isc}:${POSTGRES_PASSWORD:-isc_password}@postgres:5432/${POSTGRES_DB:-intelligent_supply_chain}
         run: npm run seed:users
       - name: Seed route-candidate data
         env:
-          DATABASE_URL: postgresql://isc:isc_password@localhost:5433/intelligent_supply_chain
+          DATABASE_URL: postgresql://${POSTGRES_USER:-isc}:${POSTGRES_PASSWORD:-isc_password}@postgres:5432/${POSTGRES_DB:-intelligent_supply_chain}
         run: python database/seeds/seed_route_candidates.py
       - name: Run backend tests
         working-directory: backend

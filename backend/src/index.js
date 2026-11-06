@@ -75,9 +75,9 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/warehouses", warehouseRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/districts", districtRoutes);
-app.use("/api", logisticsRoutes);
+app.use("/api/logistics", logisticsRoutes);
 app.use("/api/recommendations", recommendationRoutes);
-app.use("/api/recommendations", approvalRoutes);
+app.use("/api/approvals", approvalRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/audit", auditRoutes);
 
