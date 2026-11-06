@@ -24,7 +24,50 @@ app.use(cors({ origin: config.corsOrigin, credentials: true }));
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
 
-app.get("/health", (req, res) => res.json({ status: "healthy", service: "backend" }));
+
+app.get("/health/live", (req, res) => {
+  res.json({
+    status: "alive",
+    service: "backend",
+  });
+});
+
+app.get("/health/ready", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+
+    res.status(200).json({
+      status: "ready",
+      service: "backend",
+      database: "connected",
+    });
+  } catch {
+    res.status(503).json({
+      status: "not_ready",
+      service: "backend",
+      database: "unavailable",
+    });
+  }
+});
+
+// Preserve the existing health-check path.
+app.get("/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.status(200).json({
+      status: "healthy",
+      service: "backend",
+      database: "connected",
+    });
+  } catch {
+    res.status(503).json({
+      status: "unhealthy",
+      service: "backend",
+      database: "unavailable",
+    });
+  }
+});
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/demand", demandRoutes);
@@ -50,7 +93,35 @@ const server = app.listen(config.port, () => {
   console.log(`Backend listening on port ${config.port}`);
 });
 
-process.on("SIGTERM", async () => {
-  await pool.end();
-  server.close(() => process.exit(0));
-});
+
+let isShuttingDown = false;
+
+async function shutdown(signal) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  console.log(`${signal} received. Shutting down gracefully...`);
+
+  try {
+    // Stop accepting new HTTP connections first.
+    await new Promise((resolve, reject) => {
+      server.close((error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+
+    // Close PostgreSQL connections after HTTP traffic stops.
+    await pool.end();
+
+    console.log("HTTP server and database pool closed.");
+    process.exit(0);
+  } catch (error) {
+    console.error("Graceful shutdown failed:", error.message);
+    process.exit(1);
+  }
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+

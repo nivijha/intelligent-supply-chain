@@ -1,10 +1,28 @@
+
 import pg from "pg";
 import { config } from "../config.js";
 
 const { Pool } = pg;
-export const pool = new Pool({ connectionString: config.databaseUrl });
+
+const isProduction = config.nodeEnv === "production";
+
+export const pool = new Pool({
+  connectionString: config.databaseUrl,
+  
+  ssl: isProduction
+    ? { rejectUnauthorized: true }
+    : false,
+
+  max: Number(process.env.DB_POOL_MAX || 5),
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+  keepAlive: true,
+});
+
+pool.on("error", (error) => {
+  console.error("Unexpected idle PostgreSQL client error:", error.message);
+});
 
 export async function query(text, params = []) {
-  const result = await pool.query(text, params);
-  return result;
+  return pool.query(text, params);
 }
