@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import api from "../services/api";
 
 const AuthContext = createContext(null);
@@ -33,7 +39,19 @@ export function AuthProvider({ children }) {
       setUser(res.data.user);
       return { success: true, user: res.data.user };
     } catch (err) {
-      return { success: false, error: err.response?.data?.error || "Invalid email or password" };
+      const apiError = err.response?.data?.error;
+
+      const message =
+        typeof apiError === "string"
+          ? apiError
+          : typeof apiError?.message === "string"
+            ? apiError.message
+            : "Unable to sign in. Please try again.";
+
+      return {
+        success: false,
+        error: message,
+      };
     }
   }, []);
 
