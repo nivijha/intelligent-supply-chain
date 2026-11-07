@@ -116,7 +116,20 @@ jobs:
 
       - name: Print backend logs
         if: always()
-        run: docker compose logs --no-color --tail=300 backend      
+        run: docker compose logs --no-color --tail=300 backend   
+              - name: Verify seeded database
+        if: always()
+        run: |
+          docker compose exec -T postgres psql -U isc -d intelligent_supply_chain \
+            -c "SELECT name FROM roles ORDER BY name;"
+
+          docker compose exec -T postgres psql -U isc -d intelligent_supply_chain \
+            -c "SELECT email, role_id FROM users ORDER BY email;"
+
+          docker compose exec -T postgres psql -U isc -d intelligent_supply_chain \
+            -c "SELECT COUNT(*) FROM audit_logs;"
+
+      
       - name: Tear down
         if: always()
         run: docker compose down -v

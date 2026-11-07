@@ -21,9 +21,6 @@ const app = express();
 
 app.use(helmet());
 console.log("========== CORS CONFIG ==========");
-console.log("NODE_ENV:", config.nodeEnv);
-console.log("CORS_ORIGIN:", JSON.stringify(config.corsOrigin));
-console.log("=================================");
 app.use(cors({ origin: config.corsOrigin, credentials: true }));
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
