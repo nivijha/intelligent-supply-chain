@@ -2,8 +2,9 @@ import { Router } from "express";
 import { loginSchema, registerSchema } from "../validators/auth.js";
 import { validate } from "../middleware/validate.js";
 import { authenticate } from "../middleware/auth.js";
+import { ROLES } from "../middleware/rbac.js";
 import * as userRepo from "../repositories/userRepo.js";
-import { signToken } from "../utils/jwt.js";
+import { signToken, verifyToken } from "../utils/jwt.js";
 import { logAudit } from "../services/auditService.js";
 
 const router = Router();
@@ -11,6 +12,26 @@ const router = Router();
 router.post("/register", validate(registerSchema), async (req, res, next) => {
   try {
     const { name, email, password, role } = req.validated;
+
+    // Privileged roles (anything other than ANALYST) require
+    // authentication and administrator authorization. Public
+    // registration can only create ANALYST accounts.
+    if (role !== ROLES.ANALYST) {
+      const header = req.headers.authorization || "";
+      const [scheme, token] = header.split(" ");
+      if (scheme !== "Bearer" || !token) {
+        return res.status(401).json({ error: "Missing or invalid authorization header" });
+      }
+      try {
+        const payload = verifyToken(token);
+        if (payload.role !== ROLES.ADMIN) {
+          return res.status(403).json({ error: "Forbidden: only administrators can create privileged accounts" });
+        }
+      } catch {
+        return res.status(401).json({ error: "Invalid or expired token" });
+      }
+    }
+
     const existing = await userRepo.findUserByEmail(email);
     if (existing) return res.status(409).json({ error: "Email already registered" });
     const user = await userRepo.createUser({ name, email, password, roleName: role });
