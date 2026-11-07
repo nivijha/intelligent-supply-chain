@@ -8,6 +8,7 @@ dotenv.config({
   path: path.resolve(__dirname, "..", ".env"),
 });
 
+
 const requiredEnv = ["DATABASE_URL", "JWT_SECRET"];
 
 for (const key of requiredEnv) {
@@ -15,10 +16,6 @@ for (const key of requiredEnv) {
     throw new Error(`Missing required environment variable: ${key}`);
   }
 }
-console.log("========== CORS CONFIG ==========");
-console.log("NODE_ENV:", config.nodeEnv);
-console.log("CORS_ORIGIN:", JSON.stringify(config.corsOrigin));
-console.log("=================================");
 
 export const config = {
   port: Number(process.env.PORT || 3001),
