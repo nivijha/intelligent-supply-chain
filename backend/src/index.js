@@ -14,14 +14,31 @@ import districtRoutes from "./routes/districts.routes.js";
 import logisticsRoutes from "./routes/logistics.routes.js";
 import recommendationRoutes from "./routes/recommendations.routes.js";
 import approvalRoutes from "./routes/approvals.routes.js";
+import routesRoutes from "./routes/routes.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import auditRoutes from "./routes/audit.routes.js";
 
 const app = express();
 
 app.use(helmet());
-console.log("========== CORS CONFIG ==========");
-app.use(cors({ origin: config.corsOrigin, credentials: true }));
+
+const allowedOrigins = config.corsOrigin;
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow same-origin / non-browser requests that have no Origin header.
+      if (!origin) {
+        return callback(null, true);
+      }
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, origin);
+      }
+      return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
 
@@ -77,6 +94,7 @@ app.use("/api/warehouses", warehouseRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/districts", districtRoutes);
 app.use("/api/logistics", logisticsRoutes);
+app.use("/api/routes", routesRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/approvals", approvalRoutes);
 app.use("/api/dashboard", dashboardRoutes);
@@ -86,7 +104,8 @@ app.use((err, req, res, next) => {
   if (err?.type === "entity.too.large" || err?.status === 413) {
     return res.status(413).json({ error: "Request body too large" });
   }
-  console.error(err);
+
+  console.error("Request failed:", err.message);
   res.status(500).json({ error: "Internal server error" });
 });
 
