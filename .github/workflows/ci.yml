@@ -77,9 +77,31 @@ jobs:
         env:
           DATABASE_URL: postgresql://isc:isc_password@localhost:5433/intelligent_supply_chain
         run: python database/seeds/seed_route_candidates.py
+        
+      - name: Verify seeded database
+        run: |
+          docker compose exec -T postgres psql \
+            -U isc \
+            -d intelligent_supply_chain \
+            -c "SELECT name FROM roles ORDER BY name;"
+
+          docker compose exec -T postgres psql \
+            -U isc \
+            -d intelligent_supply_chain \
+            -c "SELECT email, role_id FROM users ORDER BY email;"
+
+          docker compose exec -T postgres psql \
+            -U isc \
+            -d intelligent_supply_chain \
+            -c "SELECT COUNT(*) FROM audit_logs;"
+
       - name: Run backend tests
         working-directory: backend
         run: npm test
+
+      - name: Print backend logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=300 backend      
       - name: Tear down
         if: always()
         run: docker compose down -v
