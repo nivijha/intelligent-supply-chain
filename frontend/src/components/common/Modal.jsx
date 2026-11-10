@@ -40,14 +40,14 @@ export function Modal({ isOpen, onClose, title, children, size = "md", className
     >
       <div
         ref={overlayRef}
-        className="fixed inset-0 bg-black/50 transition-opacity"
+        className="fixed inset-0 bg-black/60 transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
       <div className="flex min-h-full items-center justify-center p-4">
         <div
           ref={contentRef}
-          className={`w-full ${sizeClasses[size]} bg-white rounded-xl shadow-xl transform transition-all`}
+          className={`w-full ${sizeClasses[size]} bg-white rounded-xl ring-1 ring-black/10 shadow-2xl transform transition-all duration-300 scale-100`}
           onClick={(e) => e.stopPropagation()}
         >
           {title && (

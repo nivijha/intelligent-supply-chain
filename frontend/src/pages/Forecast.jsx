@@ -6,14 +6,14 @@ export function Forecast() {
   const [commodity, setCommodity] = useState("Wheat");
   const [region, setRegion] = useState("");
   const [warehouse, setWarehouse] = useState("");
-  const [horizon, setHorizon] = useState(30);
+  const [horizon, setHorizon] = useState(3);
 
-  const hasActiveFilters = region || warehouse || horizon !== 30;
+  const hasActiveFilters = region || warehouse || horizon !== 3;
 
   const handleClearFilters = () => {
     setRegion("");
     setWarehouse("");
-    setHorizon(30);
+    setHorizon(3);
   };
 
   return (

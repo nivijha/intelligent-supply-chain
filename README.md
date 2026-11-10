@@ -26,7 +26,6 @@ Built as a final-year engineering project, the platform is implemented as three 
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Limitations and Future Scope](#limitations-and-future-scope)
-- [Screenshots](#screenshots)
 - [License and Acknowledgements](#license-and-acknowledgements)
 
 ---
@@ -130,35 +129,35 @@ The system follows a three-service separation. The frontend talks only to the ba
 
 ```mermaid
 graph TD
-    subgraph Client
-        UI[React + Vite Frontend<br/>localhost:5173]
+    subgraph Client["Client<br/>React + Vite Frontend"]
+        UI["React + Vite Frontend<br/>localhost:5173"]
     end
 
-    subgraph Backend["Backend API (Node.js + Express)<br/>localhost:3001"]
-        AUTH[Auth & JWT]
-        RBAC[Role-Based Access Control]
-        API[REST Routes /api/*]
-        AUDIT[Audit Logging Service]
-        MLCLIENT[ML HTTP Client<br/>axios]
+    subgraph Backend["Backend API<br/>Node.js + Express<br/>localhost:3001"]
+        AUTH["Auth & JWT"]
+        RBAC["Role-Based Access Control"]
+        API["REST Routes /api/*"]
+        AUDIT["Audit Logging Service"]
+        MLCLIENT["ML HTTP Client<br/>axios"]
     end
 
-    subgraph DB[(PostgreSQL<br/>pgcrypto + pgvector<br/>localhost:5433)]
-        TBL[18 tables:<br/>users, roles, districts,<br/>products, warehouses, inventory,<br/>historical_demand, forecasts,<br/>shipments, recommendations,<br/>route_candidates, audit_logs, …]
+    subgraph DB["PostgreSQL<br/>pgcrypto + pgvector<br/>localhost:5433"]
+        TBL["18 tables:<br/>users, roles, districts,<br/>products, warehouses, inventory,<br/>historical_demand, forecasts,<br/>shipments, recommendations,<br/>route_candidates, audit_logs"]
     end
 
-    subgraph ML["ML Service (Python FastAPI)<br/>localhost:8000"]
-        RF[Random Forest Regressor<br/>demand_forecast]
-        SHAP[SHAP TreeExplainer<br/>explainability]
-        INV[Inventory Optimization]
-        RT[Route Optimization]
+    subgraph ML["ML Service<br/>Python FastAPI<br/>localhost:8000"]
+        RF["Random Forest Regressor<br/>demand_forecast"]
+        SHAP["SHAP TreeExplainer<br/>explainability"]
+        INV["Inventory Optimization"]
+        RT["Route Optimization"]
     end
 
-    UI -->|HTTP /api (Vite proxy)| API
+    UI -->|HTTP /api| API
     API --> AUTH
     API --> RBAC
     API --> AUDIT
-    API -->|forecast / explain /<br/>optimize-inventory / optimize-routes| MLCLIENT
-    MLCLIENT -->|HTTP /api/v1/*| RF
+    API --> MLCLIENT
+    MLCLIENT -->|HTTP /api/v1| RF
     MLCLIENT --> SHAP
     MLCLIENT --> INV
     MLCLIENT --> RT
@@ -170,32 +169,32 @@ graph TD
 
 ```mermaid
 flowchart LR
-    subgraph FE[Frontend]
-        U1[User action] --> R1[HTTP request /api/*]
+    subgraph FE["Frontend"]
+        U1["User action"] --> R1["HTTP request /api/*"]
     end
 
-    subgraph BE[Backend]
-        R1 --> V1[Zod validation]
-        V1 --> A1[Authenticate / RBAC]
-        A1 --> Q1[Repository query]
-        Q1 --> PG[(PostgreSQL)]
+    subgraph BE["Backend"]
+        R1 --> V1["Zod validation"]
+        V1 --> A1["Authenticate / RBAC"]
+        A1 --> Q1["Repository query"]
+        Q1 --> PG[("PostgreSQL")]
         PG --> Q1
-        A1 --> M1[Proxy to ML service]
+        A1 --> M1["Proxy to ML service"]
     end
 
-    subgraph ML[ML Service]
-        M1 --> F1[Random Forest forecast]
-        F1 --> S1[SHAP explain]
-        F1 --> I1[Inventory optimization]
-        F1 --> R1b[Route optimization]
+    subgraph ML["ML Service"]
+        M1 --> F1["Random Forest forecast"]
+        F1 --> S1["SHAP explain"]
+        F1 --> I1["Inventory optimization"]
+        F1 --> R1b["Route optimization"]
     end
 
-    I1 --> O1[Recommendations PENDING]
-    R1b --> O2[Feasible / Unserved shipments]
+    I1 --> O1["Recommendations PENDING"]
+    R1b --> O2["Feasible / Unserved shipments"]
 
-    Q1 --> R2[JSON response]
+    Q1 --> R2["JSON response"]
     M1 --> R2
-    R2 --> U2[Render in UI]
+    R2 --> U2["Render in UI"]
 ```
 
 ### Reasoning behind the architecture
@@ -904,29 +903,6 @@ The audit documentation references Render for backend/ML hosting, Vercel for the
 - **No live routing**: No Google Maps, OSRM, or other road-network engine.
 - **No automated ingestion**: Data enters only through the CSV seed script; no scheduled or event-driven pipeline.
 - **RAG reserved but unused**: `pgvector`, `documents`, and `document_chunks` exist in the schema but are not wired into any feature or API route.
-
----
-
-## Screenshots
-
-Actual screenshots are not included in the repository. Add images under `docs/screenshots/` (or `frontend/screenshots/`) and reference them here:
-
-- **Login** — sign-in form
-- **Dashboard** — inventory, pending recommendations, shipments, and warehouse counts
-- **Inventory** — stock levels, safety stock, reorder status per warehouse/product
-- **Demand forecasting** — historical vs. forecasted demand charts
-- **Explainability** — SHAP feature contributions for a forecast
-- **Recommendations** — replenishment recommendations with PENDING/APPROVED/REJECTED status
-- **Route optimization** — feasible vs. unserved shipments
-- **Approval workflow** — approve/reject a recommendation with reason
-- **Analytics** — reports and aggregated metrics
-
-Example placeholder markup (replace with real image paths):
-
-```markdown
-![Login page](./docs/screenshots/login.png)
-![Dashboard](./docs/screenshots/dashboard.png)
-```
 
 ---
 

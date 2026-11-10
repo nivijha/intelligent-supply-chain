@@ -62,7 +62,22 @@ export function ForecastChart({ commodity, horizon }) {
         title="Demand Forecast"
         subtitle="Failed to load data"
         error={true}
-      />
+      >
+        <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
+          <p className="mb-2">Could not load forecast data.</p>
+          <p className="text-xs mb-4">Make sure the backend (port 3001) and ML service (port 8000) are running and you are logged in.</p>
+          <button
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              loadData();
+            }}
+            className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </ChartContainer>
     );
   }
 

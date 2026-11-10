@@ -88,7 +88,14 @@ export function Recommendations() {
         )}
       </div>
       {recommendations.length === 0 ? (
-        <EmptyRecommendationState />
+        <div className="space-y-4">
+          <EmptyRecommendationState />
+          {canGenerate && (
+            <p className="text-sm text-gray-500 text-center">
+              Generate a recommendation to get started.
+            </p>
+          )}
+        </div>
       ) : (
         <div className="space-y-4">
           {recommendations.map((r) => (

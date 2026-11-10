@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { recommendationService } from "../services/recommendationService";
 import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { Loader2, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 
 export function Approvals() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const canGenerate = ["ADMIN", "PLANNER"].includes(user?.role);
   const canApprove = ["ADMIN", "PLANNER", "WAREHOUSE_MANAGER"].includes(user?.role);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +66,17 @@ export function Approvals() {
         <p className="text-gray-500 mt-1">Pending recommendations requiring human validation.</p>
       </div>
       {items.length === 0 ? (
-        <p className="text-gray-500">No pending approvals.</p>
+        <div className="space-y-4">
+          <p className="text-gray-500 text-center">No pending approvals.</p>
+          {canGenerate && (
+            <button
+              onClick={() => navigate("/recommendations")}
+              className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              Generate recommendations
+            </button>
+          )}
+        </div>
       ) : (
         <div className="space-y-4">
           {items.map((r) => (

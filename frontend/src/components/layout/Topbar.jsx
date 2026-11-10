@@ -1,8 +1,16 @@
 import { Search, Bell, Menu, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
+import { ProfilePopup } from "./ProfilePopup";
 
 export function Topbar({ title, onMenuClick }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const handleSignOut = () => {
+    setProfileOpen(false);
+    logout();
+  };
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200">
@@ -35,17 +43,30 @@ export function Topbar({ title, onMenuClick }) {
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
           </button>
 
-          <div className="hidden sm:flex items-center gap-3 pl-3 border-l border-gray-200">
-            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
-              <span className="text-sm font-medium text-primary-600">
-                {user?.name?.charAt(0) || "U"}
-              </span>
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-medium text-gray-900">{user?.name || "User"}</p>
-              <p className="text-xs text-gray-500">{user?.role || "Analyst"}</p>
-            </div>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+          <div className="relative sm:flex items-center gap-3 pl-3 border-l border-gray-200">
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="flex items-center gap-3 pl-3 border-l border-gray-200 hover:bg-gray-50 rounded-lg transition-colors"
+              aria-label="Open user profile"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-medium text-primary-600">
+                  {user?.name?.charAt(0) || "U"}
+                </span>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-gray-900">{user?.name || "User"}</p>
+                <p className="text-xs text-gray-500">{user?.role || "Analyst"}</p>
+              </div>
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </button>
+
+            <ProfilePopup
+              user={user}
+              isOpen={profileOpen}
+              onClose={() => setProfileOpen(false)}
+              onSignOut={handleSignOut}
+            />
           </div>
         </div>
       </div>
