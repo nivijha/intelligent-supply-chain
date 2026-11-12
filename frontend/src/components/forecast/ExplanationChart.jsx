@@ -12,7 +12,6 @@ import {
 import { forecastService } from "../../services/forecastService";
 import { ChartContainer } from "../../components/common";
 import { EmptyState } from "../../components/common/EmptyState";
-import { LoadingState } from "../../components/common";
 
 export function ExplanationChart({ commodity, region }) {
   const [features, setFeatures] = useState([]);
@@ -36,10 +35,20 @@ export function ExplanationChart({ commodity, region }) {
       }
     };
 
-    if (commodity && region) {
+    if (commodity) {
       loadExplanation();
+    } else {
+      setLoading(false);
     }
   }, [commodity, region]);
+
+  if (!commodity) {
+    return (
+      <ChartContainer title="Prediction Explanation" subtitle="Factors influencing the forecast (SHAP values)">
+        <EmptyState title="No explanation available" description="Select a commodity to view SHAP feature contributions." />
+      </ChartContainer>
+    );
+  }
 
   if (loading) {
     return (
@@ -57,7 +66,12 @@ export function ExplanationChart({ commodity, region }) {
   if (!sortedFeatures.length) {
     return (
       <ChartContainer title="Prediction Explanation" subtitle="Factors influencing the forecast (SHAP values)">
-        <EmptyState title="No explanation available" description="SHAP contributions are not available for this selection." />
+        <EmptyState
+          title="No explanation available"
+          description={region
+            ? "SHAP contributions are not available for this selection."
+            : "Select a region to view district-level SHAP feature contributions."}
+        />
       </ChartContainer>
     );
   }

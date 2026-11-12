@@ -112,7 +112,6 @@ export const forecastService = {
         const district = (districtsRes.data.data || []).find((item) => item.district_name === region);
         if (district) params.district_id = district.district_id;
       }
-      if (!params.district_id) return [];
 
       const histRes = await dedupedRequest("get", "/demand/history", { params });
       const records = (histRes.data.data || [])
