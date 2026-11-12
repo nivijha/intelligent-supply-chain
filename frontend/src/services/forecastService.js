@@ -14,6 +14,23 @@ async function productIdFor(commodity) {
   return found ? found.product_id : commodity;
 }
 
+// Deduplicate in-flight requests so concurrent identical calls share one promise.
+const inflight = new Map();
+
+function requestKey(method, url, body) {
+  return `${method}:${url}:${JSON.stringify(body ?? {})}`;
+}
+
+async function dedupedRequest(method, url, body) {
+  const key = requestKey(method, url, body);
+  if (inflight.has(key)) return inflight.get(key);
+  const promise = (method === "get" ? api.get(url) : api.post(url, body)).finally(() => {
+    inflight.delete(key);
+  });
+  inflight.set(key, promise);
+  return promise;
+}
+
 export const forecastService = {
   async getCommodities() {
     const list = await products();
@@ -40,7 +57,7 @@ export const forecastService = {
 
   async getHistoricalData(commodity, days = 180) {
     const productId = await productIdFor(commodity);
-    const res = await api.get("/demand/history", { params: { product_id: productId } });
+    const res = await dedupedRequest("get", "/demand/history", { params: { product_id: productId } });
     return (res.data.data || []).map((r) => ({
       date: r.month,
       demand: Number(r.demand_quintals),
@@ -51,7 +68,7 @@ export const forecastService = {
   async getForecastData(commodity, horizon = 1) {
     const productId = await productIdFor(commodity);
     const months = typeof horizon === "number" && horizon > 6 ? Math.round(horizon / 30) : horizon || 1;
-    const res = await api.post("/demand/forecast", {
+    const res = await dedupedRequest("post", "/demand/forecast", {
       product_id: productId,
       horizon: Math.max(1, Math.min(12, months)),
       persist: false,
@@ -97,14 +114,14 @@ export const forecastService = {
       }
       if (!params.district_id) return [];
 
-      const histRes = await api.get("/demand/history", { params });
+      const histRes = await dedupedRequest("get", "/demand/history", { params });
       const records = (histRes.data.data || [])
         .slice()
         .sort((a, b) => new Date(a.month) - new Date(b.month))
         .slice(-13);
       if (records.length < 13) return [];
 
-      const res = await api.post("/demand/explain", { records, top_n: 10 });
+      const res = await dedupedRequest("post", "/demand/explain", { records, top_n: 10 });
       const first = (res.data.data || [])[0];
       return (first?.contributions || []).map((c) => ({
         feature: c.feature,
@@ -118,7 +135,7 @@ export const forecastService = {
 
   async getForecastSummary(commodity) {
     const productId = await productIdFor(commodity);
-    const forecastRes = await api.post("/demand/forecast", {
+    const forecastRes = await dedupedRequest("post", "/demand/forecast", {
       product_id: productId,
       horizon: 3,
       persist: false,

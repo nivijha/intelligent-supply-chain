@@ -1,6 +1,10 @@
 
 import axios from "axios";
 
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   timeout: 15000,
@@ -24,8 +28,30 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  async (error) => {
+    const { config, response } = error || {};
+    const status = response?.status;
+
+    if (
+      status &&
+      RETRYABLE_STATUSES.has(status) &&
+      !config.__retryCount
+    ) {
+      config.__retryCount = 0;
+    }
+
+    if (
+      status &&
+      RETRYABLE_STATUSES.has(status) &&
+      config.__retryCount < 3
+    ) {
+      config.__retryCount += 1;
+      const backoffMs = Math.min(1000 * 2 ** (config.__retryCount - 1), 8000);
+      await sleep(backoffMs);
+      return api(config);
+    }
+
+    if (status === 401) {
       localStorage.removeItem("auth_token");
       localStorage.removeItem("auth_user");
 
