@@ -1,29 +1,41 @@
-import { Package, Warehouse, TrendingUp, AlertTriangle, Calendar, ArrowDownRight } from "lucide-react";
+import { Package, Warehouse, TrendingUp, AlertTriangle, Calendar, ArrowDownRight, AlertCircle } from "lucide-react";
 import { forecastService } from "../../services/forecastService";
 import { useEffect, useState } from "react";
 import { StatusBadge } from "../../components/common";
 
-export function ForecastSummary({ commodity }) {
+export function ForecastSummary({ commodity, forecastData, forecastLoading, forecastError }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadSummary = async () => {
-      setLoading(true);
-      try {
-        const data = await forecastService.getForecastSummary(commodity);
-        setSummary(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (commodity) {
-      loadSummary();
+    if (forecastError) {
+      setError(forecastError);
+      setLoading(false);
+      return;
     }
-  }, [commodity]);
+
+    if (forecastLoading || !forecastData || forecastData.length === 0) {
+      setSummary(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const total = forecastData.reduce((sum, r) => sum + Number(r.predicted_demand_quintals), 0);
+      setSummary({
+        forecastedDemand: Math.round(total),
+        currentInventory: 0,
+        expectedShortfall: 0,
+        safetyStock: 0,
+        horizon: forecastData.length ? forecastData.length : 3,
+      });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [forecastData, forecastLoading, forecastError]);
 
   if (loading || !summary) {
     return (
@@ -34,6 +46,15 @@ export function ForecastSummary({ commodity }) {
             <div className="h-8 bg-gray-200 rounded w-3/4" />
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+        <AlertCircle className="w-5 h-5 text-red-600" />
+        <p className="text-red-800">{error}</p>
       </div>
     );
   }

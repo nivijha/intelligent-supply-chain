@@ -82,8 +82,19 @@ export const forecastService = {
     }));
   },
 
+  async getForecastRaw(commodity, horizon = 1) {
+    const productId = await productIdFor(commodity);
+    const months = typeof horizon === "number" && horizon > 6 ? Math.round(horizon / 30) : horizon || 1;
+    const res = await dedupedRequest("post", "/demand/forecast", {
+      product_id: productId,
+      horizon: Math.max(1, Math.min(12, months)),
+      persist: false,
+    });
+    return res.data.data || [];
+  },
+
   async getModelInfo() {
-    const res = await api.get("/demand/metrics");
+    const res = await dedupedRequest("get", "/demand/metrics");
     const data = res.data;
     const rf = data.metrics?.random_forest || {};
     return {

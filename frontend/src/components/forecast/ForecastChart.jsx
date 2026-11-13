@@ -12,28 +12,20 @@ import {
 } from "recharts";
 import { ChartContainer } from "../../components/common";
 import { forecastService } from "../../services/forecastService";
-import { LoadingState } from "../../components/common";
 import { EmptyState } from "../../components/common/EmptyState";
 
-export function ForecastChart({ commodity, horizon }) {
+export function ForecastChart({ commodity, horizon, forecastData, forecastLoading, forecastError }) {
   const [historicalData, setHistoricalData] = useState([]);
-  const [forecastData, setForecastData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      setError(null);
       try {
-        const [hist, forecast] = await Promise.all([
-          forecastService.getHistoricalData(commodity, 180),
-          forecastService.getForecastData(commodity, horizon),
-        ]);
+        const hist = await forecastService.getHistoricalData(commodity, 180);
         setHistoricalData(hist);
-        setForecastData(forecast);
-      } catch (err) {
-        setError(err.message);
+      } catch {
+        // Error surfaced via forecastError prop from parent
       } finally {
         setLoading(false);
       }
@@ -42,21 +34,17 @@ export function ForecastChart({ commodity, horizon }) {
     if (commodity) {
       loadData();
     }
-  }, [commodity, horizon]);
+  }, [commodity]);
 
-  const combinedData = [...historicalData, ...forecastData];
+  const combinedData = [...historicalData, ...(forecastData || [])].map((r) => ({
+    date: r.forecast_month || r.date,
+    demand: Number(r.predicted_demand_quintals ?? r.demand),
+    lowerBound: Number(r.predicted_demand_quintals ?? r.demand) * 0.9,
+    upperBound: Number(r.predicted_demand_quintals ?? r.demand) * 1.1,
+    type: r.type || "forecast",
+  }));
 
-  if (loading) {
-    return (
-      <ChartContainer
-        title="Demand Forecast"
-        subtitle={`Historical vs Forecast for ${commodity || "select a commodity"}`}
-        loading={true}
-      />
-    );
-  }
-
-  if (error) {
+  if (forecastError) {
     return (
       <ChartContainer
         title="Demand Forecast"
@@ -65,12 +53,15 @@ export function ForecastChart({ commodity, horizon }) {
       >
         <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
           <p className="mb-2">Could not load forecast data.</p>
-          <p className="text-xs mb-4">Make sure the backend (port 3001) and ML service (port 8000) are running and you are logged in.</p>
+          <p className="text-xs mb-4">{forecastError}</p>
           <button
             onClick={() => {
               setError(null);
               setLoading(true);
-              loadData();
+              if (commodity) {
+                const hist = forecastService.getHistoricalData(commodity, 180);
+                hist.then((h) => setHistoricalData(h));
+              }
             }}
             className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
           >
@@ -78,6 +69,16 @@ export function ForecastChart({ commodity, horizon }) {
           </button>
         </div>
       </ChartContainer>
+    );
+  }
+
+  if (loading || forecastLoading) {
+    return (
+      <ChartContainer
+        title="Demand Forecast"
+        subtitle={`Historical vs Forecast for ${commodity || "select a commodity"}`}
+        loading={true}
+      />
     );
   }
 

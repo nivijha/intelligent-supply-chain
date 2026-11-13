@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ForecastFilters, ForecastChart, ForecastSummary, ExplanationChart } from "../components/forecast";
 import { TrendingUp, Download, Filter } from "lucide-react";
+import { forecastService } from "../services/forecastService";
 
 export function Forecast() {
   const [commodity, setCommodity] = useState("Wheat");
   const [region, setRegion] = useState("");
   const [warehouse, setWarehouse] = useState("");
   const [horizon, setHorizon] = useState(3);
+
+  const [forecastData, setForecastData] = useState(null);
+  const [forecastLoading, setForecastLoading] = useState(true);
+  const [forecastError, setForecastError] = useState(null);
 
   const hasActiveFilters = region || warehouse || horizon !== 3;
 
@@ -15,6 +20,29 @@ export function Forecast() {
     setWarehouse("");
     setHorizon(3);
   };
+
+  useEffect(() => {
+    const loadForecast = async () => {
+      setForecastLoading(true);
+      setForecastError(null);
+      try {
+        const data = await forecastService.getForecastRaw(commodity, horizon);
+        setForecastData(data);
+      } catch (err) {
+        setForecastError(err.message);
+        setForecastData([]);
+      } finally {
+        setForecastLoading(false);
+      }
+    };
+
+    if (commodity) {
+      loadForecast();
+    } else {
+      setForecastData([]);
+      setForecastLoading(false);
+    }
+  }, [commodity, horizon]);
 
   return (
     <div className="space-y-6">
@@ -50,9 +78,9 @@ export function Forecast() {
         hasActiveFilters={hasActiveFilters}
       />
 
-      <ForecastSummary commodity={commodity} />
+      <ForecastSummary commodity={commodity} forecastData={forecastData} forecastLoading={forecastLoading} forecastError={forecastError} />
 
-      <ForecastChart commodity={commodity} horizon={horizon} />
+      <ForecastChart commodity={commodity} horizon={horizon} forecastData={forecastData} forecastLoading={forecastLoading} forecastError={forecastError} />
 
       <ExplanationChart commodity={commodity} region={region} />
     </div>

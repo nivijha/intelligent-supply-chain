@@ -46,7 +46,17 @@ api.interceptors.response.use(
       config.__retryCount < 3
     ) {
       config.__retryCount += 1;
-      const backoffMs = Math.min(1000 * 2 ** (config.__retryCount - 1), 8000);
+
+      let backoffMs;
+      const retryAfter = response?.headers?.["retry-after"];
+      if (retryAfter) {
+        backoffMs = Number(retryAfter) * 1000 || 0;
+      }
+      if (!backoffMs || backoffMs <= 0) {
+        const base = Math.min(1000 * 2 ** (config.__retryCount - 1), 8000);
+        backoffMs = base + Math.floor(Math.random() * base * 0.3);
+      }
+
       await sleep(backoffMs);
       return api(config);
     }
