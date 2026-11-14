@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { ForecastFilters, ForecastChart, ForecastSummary, ExplanationChart } from "../components/forecast";
 import { TrendingUp, Download, Filter } from "lucide-react";
-import { forecastService } from "../services/forecastService";
+import { forecastService, productIdFor } from "../services/forecastService";
+import { inventoryService } from "../services/inventoryService";
 
 export function Forecast() {
   const [commodity, setCommodity] = useState("Wheat");
@@ -10,6 +11,7 @@ export function Forecast() {
   const [horizon, setHorizon] = useState(3);
 
   const [forecastData, setForecastData] = useState(null);
+  const [inventoryData, setInventoryData] = useState(null);
   const [forecastLoading, setForecastLoading] = useState(true);
   const [forecastError, setForecastError] = useState(null);
 
@@ -26,11 +28,20 @@ export function Forecast() {
       setForecastLoading(true);
       setForecastError(null);
       try {
-        const data = await forecastService.getForecastRaw(commodity, horizon);
-        setForecastData(data);
+        const [forecast, inventory] = await Promise.all([
+          forecastService.getForecastRaw(commodity, horizon),
+          (async () => {
+            const productId = await productIdFor(commodity);
+            const res = await inventoryService.getAll({ product_id: productId });
+            return res.data || [];
+          })(),
+        ]);
+        setForecastData(forecast);
+        setInventoryData(inventory);
       } catch (err) {
         setForecastError(err.message);
         setForecastData([]);
+        setInventoryData([]);
       } finally {
         setForecastLoading(false);
       }
@@ -40,6 +51,7 @@ export function Forecast() {
       loadForecast();
     } else {
       setForecastData([]);
+      setInventoryData([]);
       setForecastLoading(false);
     }
   }, [commodity, horizon]);
@@ -78,7 +90,14 @@ export function Forecast() {
         hasActiveFilters={hasActiveFilters}
       />
 
-      <ForecastSummary commodity={commodity} forecastData={forecastData} forecastLoading={forecastLoading} forecastError={forecastError} />
+      <ForecastSummary
+        commodity={commodity}
+        forecastData={forecastData}
+        inventoryData={inventoryData}
+        forecastLoading={forecastLoading}
+        forecastError={forecastError}
+        horizon={horizon}
+      />
 
       <ForecastChart commodity={commodity} horizon={horizon} forecastData={forecastData} forecastLoading={forecastLoading} forecastError={forecastError} />
 

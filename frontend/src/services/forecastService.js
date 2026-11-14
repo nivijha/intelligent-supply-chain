@@ -14,6 +14,8 @@ async function productIdFor(commodity) {
   return found ? found.product_id : commodity;
 }
 
+export { productIdFor };
+
 // Deduplicate in-flight requests so concurrent identical calls share one promise.
 const inflight = new Map();
 

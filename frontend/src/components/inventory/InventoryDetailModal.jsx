@@ -15,8 +15,10 @@ export function InventoryDetailModal({ item, isOpen, onClose }) {
     }
   };
 
-  const deficit = item.forecastDemand - item.currentStock;
-  const deficitPercent = ((deficit / item.currentStock) * 100).toFixed(1);
+  const forecastDemand = Number(item.forecastDemand || 0);
+  const currentStock = Number(item.currentStock || 0);
+  const deficit = forecastDemand - currentStock;
+  const deficitPercent = currentStock > 0 ? ((deficit / currentStock) * 100).toFixed(1) : 0;
 
   return (
     <Modal
@@ -109,7 +111,7 @@ export function InventoryDetailModal({ item, isOpen, onClose }) {
                 <span className="font-medium">Coverage</span>
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                {item.forecastDemand > 0 ? Math.max(0, Math.round((item.currentStock / item.forecastDemand) * 100)) : 0}%
+                {forecastDemand > 0 ? Math.max(0, Math.round((currentStock / forecastDemand) * 100)) : 0}%
               </p>
               <p className="text-sm text-gray-500">Days of supply at forecast rate</p>
             </div>

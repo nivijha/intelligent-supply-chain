@@ -38,7 +38,7 @@ export function ForecastChart({ commodity, horizon, forecastData, forecastLoadin
 
   const combinedData = [...historicalData, ...(forecastData || [])].map((r) => ({
     date: r.forecast_month || r.date,
-    demand: Number(r.predicted_demand_quintals ?? r.demand),
+    demand: Number(r.predicted_demand_quintals ?? r.demand ?? 0),
     lowerBound: Number(r.predicted_demand_quintals ?? r.demand) * 0.9,
     upperBound: Number(r.predicted_demand_quintals ?? r.demand) * 1.1,
     type: r.type || "forecast",
@@ -93,7 +93,7 @@ export function ForecastChart({ commodity, horizon, forecastData, forecastLoadin
   return (
     <ChartContainer
       title="Demand Forecast"
-      subtitle={`Historical vs Forecast for ${commodity} (${horizon} days)`}
+      subtitle={`Historical vs Forecast for ${commodity} (${horizon} Months)`}
       action={{ label: "Export" }}
     >
       <div className="h-80">

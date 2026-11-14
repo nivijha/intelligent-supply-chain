@@ -3,7 +3,7 @@ import { forecastService } from "../../services/forecastService";
 import { useEffect, useState } from "react";
 import { StatusBadge } from "../../components/common";
 
-export function ForecastSummary({ commodity, forecastData, forecastLoading, forecastError }) {
+export function ForecastSummary({ commodity, forecastData, inventoryData, forecastLoading, forecastError, horizon }) {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,20 +22,28 @@ export function ForecastSummary({ commodity, forecastData, forecastLoading, fore
     }
 
     try {
-      const total = forecastData.reduce((sum, r) => sum + Number(r.predicted_demand_quintals), 0);
+      const total = forecastData.reduce((sum, r) => sum + (Number(r.predicted_demand_quintals) || 0), 0);
+      const currentInventory = inventoryData
+        ? inventoryData.reduce((sum, item) => sum + Number(item.currentStock || 0), 0)
+        : 0;
+      const safetyStock = inventoryData
+        ? inventoryData.reduce((sum, item) => sum + Number(item.safetyStock || 0), 0)
+        : 0;
+      const expectedShortfall = Math.max(0, Math.round(total) - currentInventory - safetyStock);
+
       setSummary({
         forecastedDemand: Math.round(total),
-        currentInventory: 0,
-        expectedShortfall: 0,
-        safetyStock: 0,
-        horizon: forecastData.length ? forecastData.length : 3,
+        currentInventory,
+        expectedShortfall,
+        safetyStock,
+        horizon: horizon,
       });
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [forecastData, forecastLoading, forecastError]);
+  }, [forecastData, inventoryData, forecastLoading, forecastError, commodity, horizon]);
 
   if (loading || !summary) {
     return (
@@ -76,7 +84,7 @@ export function ForecastSummary({ commodity, forecastData, forecastLoading, fore
             <TrendingUp className="w-5 h-5 text-blue-600" />
           </div>
         </div>
-        <p className="text-xs text-gray-400 mt-2">Over {summary.horizon} days</p>
+        <p className="text-xs text-gray-400 mt-2">Over {summary.horizon} Months</p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-4">
