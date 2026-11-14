@@ -13,12 +13,29 @@ import { forecastService } from "../../services/forecastService";
 import { ChartContainer } from "../../components/common";
 import { EmptyState } from "../../components/common/EmptyState";
 
-export function ExplanationChart({ commodity, region }) {
+export function ExplanationChart({ commodity, region, staggerDelayMs = 500 }) {
   const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modelInfo, setModelInfo] = useState(null);
+  const [staggered, setStaggered] = useState(false);
 
   useEffect(() => {
+    if (!commodity) {
+      setLoading(false);
+      setStaggered(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setStaggered(true);
+    }, staggerDelayMs);
+
+    return () => clearTimeout(timer);
+  }, [commodity, staggerDelayMs]);
+
+  useEffect(() => {
+    if (!staggered || !commodity) return;
+
     const loadExplanation = async () => {
       setLoading(true);
       try {
@@ -35,12 +52,8 @@ export function ExplanationChart({ commodity, region }) {
       }
     };
 
-    if (commodity) {
-      loadExplanation();
-    } else {
-      setLoading(false);
-    }
-  }, [commodity, region]);
+    loadExplanation();
+  }, [staggered, commodity, region]);
 
   if (!commodity) {
     return (
@@ -50,12 +63,12 @@ export function ExplanationChart({ commodity, region }) {
     );
   }
 
-  if (loading) {
+  if (!staggered || loading) {
     return (
       <ChartContainer
         title="Prediction Explanation"
         subtitle="Factors influencing the forecast (SHAP values)"
-        loading={true}
+        loading={!staggered || loading}
       />
     );
   }

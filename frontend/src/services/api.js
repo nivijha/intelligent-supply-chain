@@ -1,4 +1,3 @@
-
 import axios from "axios";
 
 const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
@@ -12,6 +11,34 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+/* ------------------------------------------------------------------ */
+/* Request queue – prevents burst of concurrent requests from hitting   */
+/* Render’s rate limiter. Only one request is in flight at a time,      */
+/* with a small inter-request gap so bursts are spaced out.             */
+/* ------------------------------------------------------------------ */
+const QUEUE_INTER_REQUEST_GAP_MS = 400;
+let lastRequestTime = 0;
+let queuePromise = Promise.resolve();
+
+function enqueueRequest(perform) {
+  queuePromise = queuePromise
+    .then(async () => {
+      const now = Date.now();
+      const gap = lastRequestTime > 0 ? now - lastRequestTime : 0;
+      if (gap < QUEUE_INTER_REQUEST_GAP_MS) {
+        await sleep(QUEUE_INTER_REQUEST_GAP_MS - gap);
+      }
+      lastRequestTime = Date.now();
+      return perform();
+    });
+  return queuePromise;
+}
+
+const originalRequest = api.request.bind(api);
+api.request = async (config) => {
+  return enqueueRequest(() => originalRequest(config));
+};
 
 api.interceptors.request.use(
   (config) => {

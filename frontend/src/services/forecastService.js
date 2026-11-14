@@ -31,6 +31,24 @@ async function dedupedRequest(method, url, body) {
   return promise;
 }
 
+/* ------------------------------------------------------------------ */
+/* Model info cache with TTL – model metrics change rarely, so cache    */
+/* them for 5 minutes to avoid repeated GET /api/demand/metrics calls   */
+/* on every page navigation.                                            */
+/* ------------------------------------------------------------------ */
+const MODEL_INFO_TTL_MS = 5 * 60 * 1000;
+let modelInfoCache = { data: null, timestamp: 0 };
+
+async function getModelInfoCached() {
+  const now = Date.now();
+  if (modelInfoCache.data && now - modelInfoCache.timestamp < MODEL_INFO_TTL_MS) {
+    return modelInfoCache.data;
+  }
+  const res = await dedupedRequest("get", "/demand/metrics");
+  modelInfoCache = { data: res.data, timestamp: now };
+  return res.data;
+}
+
 export const forecastService = {
   async getCommodities() {
     const list = await products();
@@ -94,8 +112,7 @@ export const forecastService = {
   },
 
   async getModelInfo() {
-    const res = await dedupedRequest("get", "/demand/metrics");
-    const data = res.data;
+    const data = await getModelInfoCached();
     const rf = data.metrics?.random_forest || {};
     return {
       model: "Random Forest",
